@@ -45,3 +45,4 @@ def valid_input(user_input):
         return False, "User input is too long"
     
     return True, cleaned
+
