@@ -3,11 +3,12 @@ from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 from agent import agent
 from utils import valid_input
-from db import get_chat_history
+from db import get_chat_history, create_table
 import logging
 
 app = FastAPI(title="AI Agent")
 
+create_table()
 
 class Query(BaseModel):
     question: str
