@@ -25,4 +25,3 @@ DB_CONFIG = {
     "port": get_env("DB_PORT"),
 }
 
-print(os.getenv("GROQ_API_KEY"))

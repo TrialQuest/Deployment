@@ -32,3 +32,34 @@ def save_chat(question, answer):
     finally:
         if conn:
             conn.close()
+
+
+def get_chat_history(limit=20):
+    conn = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            SELECT question, answer
+            FROM chat_history
+            LIMIT %s
+            """,
+            (limit,)
+        )
+
+        rows = cur.fetchall()
+
+        cur.close()
+
+        return rows
+
+    except Exception as e:
+        logging.error(f"DB Error: {e}")
+        return []
+
+    finally:
+        if conn:
+            conn.close()

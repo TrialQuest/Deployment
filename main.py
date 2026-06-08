@@ -3,11 +3,11 @@ from pydantic import BaseModel
 from fastapi.responses import HTMLResponse
 from agent import agent
 from utils import valid_input
+from db import get_chat_history
 import logging
 
-app = FastAPI(
-    title="AI Agent"
-)
+app = FastAPI(title="AI Agent")
+
 
 class Query(BaseModel):
     question: str
@@ -38,6 +38,13 @@ def ask(query: Query):
         return {"error": str(e)}
 
 
+@app.get("/history")
+def history():
+    return {
+        "history": get_chat_history()
+    }
+
+
 @app.get("/", response_class=HTMLResponse)
 def ui():
     return """
@@ -47,92 +54,217 @@ def ui():
         <title>AI Agent</title>
 
         <style>
-            body {
-                font-family: Arial, sans-serif;
-                max-width: 800px;
-                margin: 40px auto;
-                padding: 20px;
+
+            *{
+                box-sizing:border-box;
             }
 
-            h2 {
-                text-align: center;
+            body{
+                margin:0;
+                font-family:Arial,sans-serif;
+                background:#f5f5f5;
             }
 
-            input {
-                width: 70%;
-                padding: 10px;
+            .container{
+                display:flex;
+                height:100vh;
             }
 
-            button {
-                padding: 10px 15px;
-                cursor: pointer;
+            .left{
+                flex:2;
+                padding:30px;
+                background:white;
             }
 
-            #output {
-                margin-top: 20px;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                overflow-x: auto;
-                border: 1px solid #ccc;
-                padding: 10px;
-                min-height: 50px;
-                background: #f9f9f9;
+            .right{
+                flex:1;
+                border-left:1px solid #ddd;
+                background:#fafafa;
+                padding:20px;
+                overflow-y:auto;
             }
+
+            h2{
+                margin-top:0;
+            }
+
+            input{
+                width:75%;
+                padding:12px;
+                font-size:16px;
+            }
+
+            button{
+                padding:12px 18px;
+                cursor:pointer;
+            }
+
+            #output{
+                margin-top:20px;
+                padding:15px;
+                border:1px solid #ccc;
+                background:#f9f9f9;
+                min-height:150px;
+                white-space:pre-wrap;
+            }
+
+            .history-item{
+                background:white;
+                border:1px solid #ddd;
+                border-radius:8px;
+                padding:12px;
+                margin-bottom:12px;
+            }
+
+            .question{
+                font-weight:bold;
+                margin-bottom:6px;
+            }
+
+            .answer{
+                color:#333;
+            }
+
         </style>
+
     </head>
 
     <body>
-        <h2>AI Agent</h2>
 
-        <input
-            id="q"
-            type="text"
-            placeholder="Ask something..."
-            onkeydown="if(event.key==='Enter') send()"
-        />
+        <div class="container">
 
-        <button onclick="send()">Ask</button>
+            <div class="left">
 
-        <div id="output"></div>
+                <h2>AI Agent</h2>
+
+                <input
+                    id="q"
+                    type="text"
+                    placeholder="Ask something..."
+                    onkeydown="if(event.key==='Enter') send()"
+                />
+
+                <button onclick="send()">Ask</button>
+
+                <div id="output">
+                    Ask a question...
+                </div>
+
+            </div>
+
+            <div class="right">
+
+                <h2>History</h2>
+
+                <div id="history">
+                    Loading...
+                </div>
+
+            </div>
+
+        </div>
 
         <script>
-            async function send() {
 
-                const q = document.getElementById("q").value.trim();
-
-                if (!q) {
-                    document.getElementById("output").innerText =
-                        "Please enter a question.";
-                    return;
-                }
-
-                document.getElementById("output").innerText =
-                    "Loading...";
+            async function loadHistory() {
 
                 try {
 
-                    const res = await fetch("/ask", {
-                        method: "POST",
+                    const res = await fetch('/history');
+                    const data = await res.json();
+
+                    const historyDiv =
+                        document.getElementById('history');
+
+                    historyDiv.innerHTML = '';
+
+                    if (!data.history || data.history.length === 0) {
+
+                        historyDiv.innerHTML =
+                            '<p>No history found</p>';
+
+                        return;
+                    }
+
+                    data.history.forEach(item => {
+
+                        const div =
+                            document.createElement('div');
+
+                        div.className = 'history-item';
+
+                        div.innerHTML =
+                            '<div class="question">Q: '
+                            + item[0] +
+                            '</div>' +
+                            '<div class="answer">A: '
+                            + item[1] +
+                            '</div>';
+
+                        historyDiv.appendChild(div);
+
+                    });
+
+                }
+                catch (err) {
+
+                    document.getElementById('history').innerHTML =
+                        'Failed to load history';
+
+                }
+            }
+
+
+            async function send() {
+
+                const q =
+                    document.getElementById('q').value.trim();
+
+                if (!q) {
+                    return;
+                }
+
+                document.getElementById('output').innerText =
+                    'Loading...';
+
+                try {
+
+                    const res = await fetch('/ask', {
+
+                        method: 'POST',
+
                         headers: {
-                            "Content-Type": "application/json"
+                            'Content-Type': 'application/json'
                         },
+
                         body: JSON.stringify({
                             question: q
                         })
+
                     });
 
                     const data = await res.json();
 
-                    document.getElementById("output").innerText =
-                        data.answer || data.error || "No response";
+                    document.getElementById('output').innerText =
+                        data.answer ||
+                        data.error ||
+                        'No response';
 
-                } catch (e) {
+                    document.getElementById('q').value = '';
 
-                    document.getElementById("output").innerText =
-                        "Request failed: " + e.message;
+                    loadHistory();
+
+                }
+                catch (err) {
+
+                    document.getElementById('output').innerText =
+                        'Request failed: ' + err.message;
 
                 }
             }
+
+            loadHistory();
+
         </script>
 
     </body>
