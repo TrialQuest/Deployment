@@ -72,12 +72,21 @@ def ui():
 
             *{
                 box-sizing:border-box;
+                margin:0;
+                padding:0;
             }
 
             body{
-                margin:0;
                 font-family:Arial,sans-serif;
-                background:#f5f5f5;
+                background:linear-gradient(
+                    135deg,
+                    #0f172a,
+                    #111827,
+                    #020617
+                );
+                color:white;
+                height:100vh;
+                overflow:hidden;
             }
 
             .container{
@@ -88,56 +97,169 @@ def ui():
             .left{
                 flex:2;
                 padding:30px;
-                background:white;
+                background:rgba(255,255,255,0.03);
+                backdrop-filter:blur(10px);
             }
 
             .right{
                 flex:1;
-                border-left:1px solid #ddd;
-                background:#fafafa;
                 padding:20px;
                 overflow-y:auto;
+
+                background:rgba(255,255,255,0.05);
+
+                border-left:1px solid rgba(255,255,255,0.1);
+
+                backdrop-filter:blur(10px);
             }
 
             h2{
-                margin-top:0;
+                margin-bottom:20px;
+                color:#60a5fa;
+                font-size:28px;
+            }
+
+            .input-row{
+                display:flex;
+                gap:10px;
+                margin-bottom:20px;
             }
 
             input{
-                width:75%;
-                padding:12px;
+                flex:1;
+                padding:14px;
+
+                background:#1e293b;
+                color:white;
+
+                border:1px solid #334155;
+                border-radius:10px;
+
                 font-size:16px;
+                outline:none;
+
+                transition:0.3s;
+            }
+
+            input:focus{
+                border-color:#3b82f6;
+                box-shadow:0 0 10px rgba(59,130,246,.4);
             }
 
             button{
-                padding:12px 18px;
+                padding:14px 22px;
+
+                border:none;
+                border-radius:10px;
+
+                background:#2563eb;
+                color:white;
+
+                font-weight:bold;
+
                 cursor:pointer;
+
+                transition:0.3s;
+            }
+
+            button:hover{
+                background:#1d4ed8;
+                transform:translateY(-2px);
             }
 
             #output{
-                margin-top:20px;
-                padding:15px;
-                border:1px solid #ccc;
-                background:#f9f9f9;
-                min-height:150px;
+                margin-top:10px;
+
+                min-height:250px;
+
+                padding:20px;
+
+                background:rgba(255,255,255,0.05);
+
+                border:1px solid rgba(255,255,255,0.08);
+
+                border-radius:12px;
+
                 white-space:pre-wrap;
+                line-height:1.7;
+
+                color:#e2e8f0;
+
+                backdrop-filter:blur(10px);
+            }
+
+            #history{
+                margin-top:10px;
             }
 
             .history-item{
-                background:white;
-                border:1px solid #ddd;
-                border-radius:8px;
-                padding:12px;
-                margin-bottom:12px;
+                background:rgba(255,255,255,0.05);
+
+                border:1px solid rgba(255,255,255,0.08);
+
+                border-radius:12px;
+
+                padding:15px;
+                margin-bottom:15px;
+
+                transition:0.3s;
+            }
+
+            .history-item:hover{
+                transform:translateY(-2px);
+
+                border-color:#3b82f6;
+
+                background:rgba(59,130,246,0.08);
             }
 
             .question{
                 font-weight:bold;
-                margin-bottom:6px;
+                color:#60a5fa;
+                margin-bottom:8px;
             }
 
             .answer{
-                color:#333;
+                color:#cbd5e1;
+                line-height:1.5;
+            }
+
+            ::-webkit-scrollbar{
+                width:8px;
+            }
+
+            ::-webkit-scrollbar-track{
+                background:#111827;
+            }
+
+            ::-webkit-scrollbar-thumb{
+                background:#334155;
+                border-radius:10px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover{
+                background:#475569;
+            }
+
+            @media(max-width:900px){
+
+                .container{
+                    flex-direction:column;
+                }
+
+                .right{
+                    height:40vh;
+                    border-left:none;
+                    border-top:1px solid rgba(255,255,255,0.1);
+                }
+
+                .input-row{
+                    flex-direction:column;
+                }
+
+                button{
+                    width:100%;
+                }
             }
 
         </style>
@@ -150,26 +272,32 @@ def ui():
 
             <div class="left">
 
-                <h2>AI Agent</h2>
+                <h2>🤖 AI Agent</h2>
 
-                <input
-                    id="q"
-                    type="text"
-                    placeholder="Ask something..."
-                    onkeydown="if(event.key==='Enter') send()"
-                />
+                <div class="input-row">
 
-                <button onclick="send()">Ask</button>
+                    <input
+                        id="q"
+                        type="text"
+                        placeholder="Ask something..."
+                        onkeydown="if(event.key==='Enter') send()"
+                    />
+
+                    <button onclick="send()">
+                        Ask
+                    </button>
+
+                </div>
 
                 <div id="output">
-                    Ask a question...
+                    Welcome. Ask me anything...
                 </div>
 
             </div>
 
             <div class="right">
 
-                <h2>History</h2>
+                <h2>📜 History</h2>
 
                 <div id="history">
                     Loading...
@@ -229,7 +357,6 @@ def ui():
                 }
             }
 
-
             async function send() {
 
                 const q =
@@ -240,7 +367,7 @@ def ui():
                 }
 
                 document.getElementById('output').innerText =
-                    'Loading...';
+                    'Thinking...';
 
                 try {
 
