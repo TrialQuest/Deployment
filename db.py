@@ -4,7 +4,13 @@ import logging
 
 
 def get_connection():
-    return psycopg2.connect(**DB_CONFIG)
+    # OLD
+    # return psycopg2.connect(**DB_CONFIG)
+
+    return psycopg2.connect(
+        **DB_CONFIG,
+        connect_timeout=10
+    )
 
 
 def create_table():
@@ -12,38 +18,46 @@ def create_table():
 
     try:
         conn = get_connection()
-        cur = conn.cursor()
 
-        cur.execute("""
-            SELECT EXISTS (
-                SELECT 1
-                FROM information_schema.tables
-                WHERE table_schema = 'public'
-                AND table_name = 'chat_history'
-            );
-        """)
+        # OLD
+        # cur = conn.cursor()
 
-        exists = cur.fetchone()[0]
+        with conn.cursor() as cur:
 
-        if exists:
-            logging.info("chat_history table already exists")
-        else:
             cur.execute("""
-                CREATE TABLE chat_history (
-                    id SERIAL PRIMARY KEY,
-                    question TEXT NOT NULL,
-                    answer TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                    AND table_name = 'chat_history'
+                );
             """)
 
-            conn.commit()
+            exists = cur.fetchone()[0]
 
-            logging.info("chat_history table created")
+            if exists:
+                logging.info("chat_history table already exists")
+            else:
+                cur.execute("""
+                    CREATE TABLE chat_history (
+                        id SERIAL PRIMARY KEY,
+                        question TEXT NOT NULL,
+                        answer TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
 
-        cur.close()
+                conn.commit()
+
+                logging.info("chat_history table created")
+
+        # OLD
+        # cur.close()
 
     except Exception as e:
+        if conn:
+            conn.rollback()
+
         logging.error(f"Create table error: {e}")
 
     finally:
@@ -55,22 +69,34 @@ def save_chat(question, answer):
     conn = None
 
     try:
+        logging.info("save_chat called")
+
         conn = get_connection()
-        cur = conn.cursor()
 
-        cur.execute(
-            """
-            INSERT INTO chat_history(question, answer)
-            VALUES (%s, %s)
-            """,
-            (question, answer)
-        )
+        # OLD
+        # cur = conn.cursor()
 
-        conn.commit()
+        with conn.cursor() as cur:
 
-        cur.close()
+            cur.execute(
+                """
+                INSERT INTO chat_history(question, answer)
+                VALUES (%s, %s)
+                """,
+                (question, answer)
+            )
+
+            conn.commit()
+
+            logging.info("chat saved successfully")
+
+        # OLD
+        # cur.close()
 
     except Exception as e:
+        if conn:
+            conn.rollback()
+
         logging.error(f"DB Error: {e}")
 
     finally:
@@ -83,21 +109,26 @@ def get_chat_history(limit=20):
 
     try:
         conn = get_connection()
-        cur = conn.cursor()
 
-        cur.execute(
-            """
-            SELECT question, answer, created_at
-            FROM chat_history
-            ORDER BY id DESC
-            LIMIT %s
-            """,
-            (limit,)
-        )
+        # OLD
+        # cur = conn.cursor()
 
-        rows = cur.fetchall()
+        with conn.cursor() as cur:
 
-        cur.close()
+            cur.execute(
+                """
+                SELECT question, answer, created_at
+                FROM chat_history
+                ORDER BY id DESC
+                LIMIT %s
+                """,
+                (limit,)
+            )
+
+            rows = cur.fetchall()
+
+        # OLD
+        # cur.close()
 
         return rows
 

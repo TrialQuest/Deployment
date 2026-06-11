@@ -25,3 +25,4 @@ DB_CONFIG = {
     "port": get_env("DB_PORT"),
 }
 
+DATABASE_URL = os.getenv("DATABASE_URL")
