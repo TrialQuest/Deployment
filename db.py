@@ -1,14 +1,19 @@
 import psycopg2
-from config import DB_CONFIG
+# from config import DB_CONFIG
+from config import DATABASE_URL
 import logging
 
 
 def get_connection():
+
     # OLD
-    # return psycopg2.connect(**DB_CONFIG)
+    # return psycopg2.connect(
+    #     **DB_CONFIG,
+    #     connect_timeout=10
+    # )
 
     return psycopg2.connect(
-        **DB_CONFIG,
+        DATABASE_URL,
         connect_timeout=10
     )
 

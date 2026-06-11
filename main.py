@@ -45,6 +45,20 @@ def history():
         "history": get_chat_history()
     }
 
+@app.get("/db-test")
+def db_test():
+    try:
+        rows = get_chat_history()
+        return {
+            "status": "success",
+            "count": len(rows),
+            "rows": rows
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 @app.get("/", response_class=HTMLResponse)
 def ui():
